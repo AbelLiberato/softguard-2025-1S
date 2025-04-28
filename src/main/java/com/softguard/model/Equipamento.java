@@ -13,11 +13,16 @@ public class Equipamento {
     private String nome;
     private String numeroPatrimonio;
     private String tipo;
+    private String nomeUsuario;
 
-    public Equipamento(String nome, String numeroPatrimonio, String tipo) {
-        this.nome = nome;
+    public Equipamento(String nome,
+                       String numeroPatrimonio,
+                       String tipo,
+                       String nomeUsuario) {
+        this.nome             = nome;
         this.numeroPatrimonio = numeroPatrimonio;
-        this.tipo = tipo;
+        this.tipo             = tipo;
+        this.nomeUsuario      = nomeUsuario;
     }
 
     public String getNome() {
@@ -44,13 +49,23 @@ public class Equipamento {
         this.tipo = tipo;
     }
 
+    public String getNomeUsuario() {
+        return nomeUsuario;
+    }
+
+    public void setNomeUsuario(String nomeUsuario) {
+        this.nomeUsuario = nomeUsuario;
+    }
+
     @Override
     public String toString() {
         return "Equipamento{" +
                 "nome='" + nome + '\'' +
                 ", numeroPatrimonio='" + numeroPatrimonio + '\'' +
                 ", tipo='" + tipo + '\'' +
+                ", nomeUsuario='" + nomeUsuario + '\'' +
                 '}';
     }
 }
+
 
