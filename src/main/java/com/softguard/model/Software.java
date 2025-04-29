@@ -9,6 +9,8 @@ package com.softguard.model;
  * @author User
  */
 
+
+
 import java.time.LocalDate;
 
 public class Software {
