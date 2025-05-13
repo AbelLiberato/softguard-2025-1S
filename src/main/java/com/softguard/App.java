@@ -4,9 +4,15 @@
 
 package com.softguard;
 
+import com.softguard.repository.SoftwareRepository;
+import com.softguard.repository.EquipamentoRepository;
+import com.softguard.view.Menu;
 
 public class App {
     public static void main(String[] args) {
-        System.out.println("Bem-vindo ao SoftGuard - Sistema de Gestão de Licenças e Equipamentos de TI!");
+        SoftwareRepository softwareRepo = new SoftwareRepository();
+        EquipamentoRepository equipamentoRepo = new EquipamentoRepository();
+        Menu menu = new Menu(softwareRepo, equipamentoRepo);
+        menu.exibir();
     }
 }
