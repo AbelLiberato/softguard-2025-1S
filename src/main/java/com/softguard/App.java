@@ -5,8 +5,8 @@
 package com.softguard;
 
 import com.softguard.database.DatabaseInitializer;
-import com.softguard.repository.EquipamentoRepository;
-import com.softguard.repository.SoftwareRepository;
+import com.softguard.repository.EquipamentoRepositorySQLite;
+import com.softguard.repository.SoftwareRepositorySQLite;
 import com.softguard.service.EquipamentoService;
 import com.softguard.service.SoftwareService;
 import com.softguard.view.Menu;
@@ -18,9 +18,11 @@ public class App {
         // Inicializa o banco de dados SQLite e cria as tabelas
         DatabaseInitializer.initialize();
 
-        // Instancia os repositórios, serviços e exibe o menu
-        SoftwareRepository sr = new SoftwareRepository();
-        EquipamentoRepository er = new EquipamentoRepository();
+        // Usa os repositórios que salvam os dados no banco SQLite
+        SoftwareRepositorySQLite sr = new SoftwareRepositorySQLite();
+        EquipamentoRepositorySQLite er = new EquipamentoRepositorySQLite();
+
+        // Instancia os serviços e exibe o menu
         SoftwareService ss = new SoftwareService(sr);
         EquipamentoService es = new EquipamentoService(er, sr);
         Menu menu = new Menu(ss, es);

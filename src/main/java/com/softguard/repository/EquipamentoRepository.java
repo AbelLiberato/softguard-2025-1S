@@ -4,40 +4,13 @@
  */
 package com.softguard.repository;
 
-/**
- *
- * @author User
- */
-
 import com.softguard.model.Equipamento;
+import java.util.List;
+import java.util.Optional;
 
-import java.util.*;
-
-/**
- * Repositório em memória para objetos Equipamento,
- * identificados pelo numeroPatrimonio.
- */
-public class EquipamentoRepository {
-
-    private final Map<String, Equipamento> storage = new HashMap<>();
-
-    public void save(Equipamento equipamento) {
-        storage.put(equipamento.getNumeroPatrimonio(), equipamento);
-    }
-
-    public List<Equipamento> findAll() {
-        return new ArrayList<>(storage.values());
-    }
-
-    public Optional<Equipamento> findByPatrimonio(String numeroPatrimonio) {
-        return Optional.ofNullable(storage.get(numeroPatrimonio));
-    }
-
-    public void deleteByPatrimonio(String numeroPatrimonio) {
-        storage.remove(numeroPatrimonio);
-    }
-
-    public void clear() {
-        storage.clear();
-    }
+public interface EquipamentoRepository {
+    void save(Equipamento equipamento);
+    Optional<Equipamento> findByPatrimonio(String patrimonio);
+    List<Equipamento> findAll();
+    void deleteByPatrimonio(String patrimonio);
 }

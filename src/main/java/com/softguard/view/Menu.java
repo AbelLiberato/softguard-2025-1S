@@ -4,10 +4,10 @@
  */
 package com.softguard.view;
 
-import com.softguard.model.Software;
 import com.softguard.model.Equipamento;
-import com.softguard.service.SoftwareService;
+import com.softguard.model.Software;
 import com.softguard.service.EquipamentoService;
+import com.softguard.service.SoftwareService;
 
 import java.time.LocalDate;
 import java.util.List;

@@ -9,21 +9,22 @@ package com.softguard.service;
 import com.softguard.model.Equipamento;
 import com.softguard.model.Software;
 import com.softguard.repository.EquipamentoRepository;
+import com.softguard.repository.EquipamentoRepositorySQLite;
 import com.softguard.repository.SoftwareRepository;
 
-import java.util.*;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 public class EquipamentoService {
 
     private final EquipamentoRepository equipamentoRepo;
     private final SoftwareRepository softwareRepo;
-    /** Map de patrimônio → lista de códigos seriais de Software */
-    private final Map<String, List<String>> instalacoes = new HashMap<>();
 
     public EquipamentoService(EquipamentoRepository equipamentoRepo,
                               SoftwareRepository softwareRepo) {
         this.equipamentoRepo = equipamentoRepo;
-        this.softwareRepo = softwareRepo;
+        this.softwareRepo    = softwareRepo;
     }
 
     public void cadastrarEquipamento(Equipamento e) {
@@ -40,30 +41,27 @@ public class EquipamentoService {
 
     public void removerPorPatrimonio(String numeroPatrimonio) {
         equipamentoRepo.deleteByPatrimonio(numeroPatrimonio);
-        instalacoes.remove(numeroPatrimonio);
     }
 
-    /** Associa um software a um equipamento */
     public void instalarSoftware(String patrimonio, String codigoSerial) {
         // valida existência
-        Equipamento e = equipamentoRepo.findByPatrimonio(patrimonio)
+        equipamentoRepo.findByPatrimonio(patrimonio)
             .orElseThrow(() -> new NoSuchElementException("Equipamento não encontrado"));
-        Software s = softwareRepo.findBySerial(codigoSerial)
+        softwareRepo.findBySerial(codigoSerial)
             .orElseThrow(() -> new NoSuchElementException("Software não encontrado"));
 
-        instalacoes
-            .computeIfAbsent(patrimonio, k -> new ArrayList<>())
-            .add(codigoSerial);
+        // chama o método do repositório SQLite
+        ((EquipamentoRepositorySQLite) equipamentoRepo)
+            .installSoftware(patrimonio, codigoSerial);
     }
 
-    /** Lista Softwares instalados em um equipamento */
     public List<Software> listarSoftwaresInstalados(String patrimonio) {
-        List<String> seriais = instalacoes.getOrDefault(patrimonio, Collections.emptyList());
-        List<Software> resultado = new ArrayList<>();
-        for (String serial : seriais) {
-            softwareRepo.findBySerial(serial).ifPresent(resultado::add);
-        }
-        return resultado;
+        var seriais = ((EquipamentoRepositorySQLite) equipamentoRepo)
+                          .findInstalledSerials(patrimonio);
+        return seriais.stream()
+                       .map(softwareRepo::findBySerial)
+                       .flatMap(Optional::stream)
+                       .toList();
     }
 }
 
