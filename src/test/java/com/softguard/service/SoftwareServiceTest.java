@@ -4,16 +4,12 @@
  */
 package com.softguard.service;
 
-/**
- *
- * @author User
- */
-
 import com.softguard.model.Software;
 import com.softguard.repository.SoftwareRepository;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,7 +20,31 @@ class SoftwareServiceTest {
 
     @BeforeEach
     void setup() {
-        repo = new SoftwareRepository();
+        // Stub em memória simples
+        repo = new SoftwareRepository() {
+            private final Map<String, Software> storage = new HashMap<>();
+
+            @Override
+            public void save(Software software) {
+                storage.put(software.getCodigoSerial(), software);
+            }
+
+            @Override
+            public Optional<Software> findBySerial(String serial) {
+                return Optional.ofNullable(storage.get(serial));
+            }
+
+            @Override
+            public List<Software> findAll() {
+                return new ArrayList<>(storage.values());
+            }
+
+            @Override
+            public void deleteBySerial(String serial) {
+                storage.remove(serial);
+            }
+        };
+
         service = new SoftwareService(repo);
     }
 
@@ -37,8 +57,13 @@ class SoftwareServiceTest {
             LocalDate.of(2024,6,1),
             "XYZ-789", "user", "pass"
         );
+
+        // Não deve lançar
         assertDoesNotThrow(() -> service.cadastrarSoftware(s));
+
+        // E agora o repo deve conter o software
         assertTrue(repo.findBySerial("XYZ-789").isPresent());
+        assertEquals("AppX", repo.findBySerial("XYZ-789").get().getNome());
     }
 
     @Test
@@ -50,6 +75,8 @@ class SoftwareServiceTest {
             LocalDate.of(2024,5,1),
             "XYZ-789", "user", "pass"
         );
+
+        // Deve lançar IllegalArgumentException
         IllegalArgumentException ex = assertThrows(
             IllegalArgumentException.class,
             () -> service.cadastrarSoftware(s)

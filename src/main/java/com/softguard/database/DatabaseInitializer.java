@@ -9,33 +9,45 @@ import java.sql.Statement;
 
 public class DatabaseInitializer {
     public static void initialize() {
-        try (Connection conn = DatabaseConnection.connect(); Statement stmt = conn.createStatement()) {
-            String createEquipamentos = """
+        try (Connection conn = DatabaseConnection.connect();
+             Statement stmt = conn.createStatement()) {
+
+            // Tabela de Equipamentos
+            stmt.execute("""
                 CREATE TABLE IF NOT EXISTS equipamentos (
-                    id TEXT PRIMARY KEY,
-                    nome TEXT,
+                    numeroPatrimonio TEXT PRIMARY KEY,
+                    nome TEXT NOT NULL,
                     tipo TEXT,
-                    localizacao TEXT,
                     usuarioResponsavel TEXT
                 );
-            """;
+            """);
 
-            String createSoftwares = """
+            // Tabela de Softwares
+            stmt.execute("""
                 CREATE TABLE IF NOT EXISTS softwares (
-                    id TEXT PRIMARY KEY,
-                    nome TEXT,
+                    codigoSerial TEXT PRIMARY KEY,
+                    nome TEXT NOT NULL,
                     versao TEXT,
-                    chaveLicenca TEXT,
-                    equipamentoId TEXT,
-                    FOREIGN KEY (equipamentoId) REFERENCES equipamentos(id)
+                    dataLicenca TEXT,
+                    validadeLicenca TEXT,
+                    loginLicenca TEXT,
+                    senhaLicenca TEXT
                 );
-            """;
+            """);
 
-            stmt.execute(createEquipamentos);
-            stmt.execute(createSoftwares);
+            // Tabela de Associação Equipamento ↔ Software
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS equipamento_softwares (
+                    numeroPatrimonio TEXT NOT NULL,
+                    codigoSerial TEXT NOT NULL,
+                    PRIMARY KEY(numeroPatrimonio, codigoSerial),
+                    FOREIGN KEY(numeroPatrimonio) REFERENCES equipamentos(numeroPatrimonio),
+                    FOREIGN KEY(codigoSerial)     REFERENCES softwares(codigoSerial)
+                );
+            """);
 
         } catch (Exception e) {
-            System.out.println("Erro ao inicializar o banco: " + e.getMessage());
+            System.err.println("Erro ao inicializar o banco: " + e.getMessage());
         }
     }
 }
