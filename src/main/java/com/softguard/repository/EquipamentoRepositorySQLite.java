@@ -7,144 +7,137 @@ package com.softguard.repository;
 import com.softguard.model.Equipamento;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class EquipamentoRepositorySQLite implements EquipamentoRepository {
-    private final String url = "jdbc:sqlite:softguard.db";
 
-    public EquipamentoRepositorySQLite() {
-        try (Connection conn = DriverManager.getConnection(url);
-             Statement stmt = conn.createStatement()) {
-            // Tabelas já são criadas pelo DatabaseInitializer
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro iniciando tabela equipamentos", e);
-        }
+    private final Connection connection;
+
+    public EquipamentoRepositorySQLite(Connection connection) {
+        this.connection = connection;
     }
 
     @Override
     public void save(Equipamento equipamento) {
         String sql = """
-            INSERT OR REPLACE INTO equipamentos
-              (numeroPatrimonio, nome, tipo, usuarioResponsavel)
-            VALUES (?, ?, ?, ?);
+            INSERT OR REPLACE INTO equipamentos 
+              (numeroPatrimonio, nome, tipo, nomeUsuario)
+            VALUES (?, ?, ?, ?)
         """;
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement p = conn.prepareStatement(sql)) {
-            p.setString(1, equipamento.getNumeroPatrimonio());
-            p.setString(2, equipamento.getNome());
-            p.setString(3, equipamento.getTipo());
-            p.setString(4, equipamento.getNomeUsuario());
-            p.executeUpdate();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, equipamento.getNumeroPatrimonio());
+            stmt.setString(2, equipamento.getNome());
+            stmt.setString(3, equipamento.getTipo());
+            stmt.setString(4, equipamento.getNomeUsuario());
+            stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Erro salvando equipamento", e);
+            throw new RuntimeException("Erro ao salvar equipamento: " + e.getMessage(), e);
         }
     }
 
     @Override
     public Optional<Equipamento> findByPatrimonio(String patrimonio) {
         String sql = "SELECT * FROM equipamentos WHERE numeroPatrimonio = ?";
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement p = conn.prepareStatement(sql)) {
-            p.setString(1, patrimonio);
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return Optional.of(new Equipamento(
-                    rs.getString("nome"),
-                    rs.getString("numeroPatrimonio"),
-                    rs.getString("tipo"),
-                    rs.getString("usuarioResponsavel")
-                ));
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, patrimonio);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Equipamento eq = new Equipamento(
+                        rs.getString("nome"),
+                        rs.getString("numeroPatrimonio"),
+                        rs.getString("tipo"),
+                        rs.getString("nomeUsuario")
+                    );
+                    return Optional.of(eq);
+                }
             }
-            return Optional.empty();
         } catch (SQLException e) {
-            throw new RuntimeException("Erro buscando equipamento", e);
+            throw new RuntimeException("Erro ao buscar equipamento: " + e.getMessage(), e);
         }
+        return Optional.empty();
     }
 
     @Override
     public List<Equipamento> findAll() {
-        List<Equipamento> lista = new ArrayList<>();
         String sql = "SELECT * FROM equipamentos";
-        try (Connection conn = DriverManager.getConnection(url);
-             Statement stmt = conn.createStatement();
+        List<Equipamento> lista = new ArrayList<>();
+        try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                lista.add(new Equipamento(
+                Equipamento eq = new Equipamento(
                     rs.getString("nome"),
                     rs.getString("numeroPatrimonio"),
                     rs.getString("tipo"),
-                    rs.getString("usuarioResponsavel")
-                ));
+                    rs.getString("nomeUsuario")
+                );
+                lista.add(eq);
             }
-            return lista;
         } catch (SQLException e) {
-            throw new RuntimeException("Erro listando equipamentos", e);
+            throw new RuntimeException("Erro ao listar equipamentos: " + e.getMessage(), e);
         }
+        return lista;
     }
 
     @Override
     public void deleteByPatrimonio(String patrimonio) {
         String sql = "DELETE FROM equipamentos WHERE numeroPatrimonio = ?";
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement p = conn.prepareStatement(sql)) {
-            p.setString(1, patrimonio);
-            p.executeUpdate();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, patrimonio);
+            stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Erro removendo equipamento", e);
+            throw new RuntimeException("Erro ao excluir equipamento: " + e.getMessage(), e);
         }
     }
 
-    // Métodos para associação:
-
+    @Override
     public void installSoftware(String patrimonio, String codigoSerial) {
         String sql = """
-          INSERT OR IGNORE INTO equipamento_softwares
-            (numeroPatrimonio, codigoSerial)
-          VALUES (?, ?);
+            INSERT OR IGNORE INTO equipamento_softwares
+              (numeroPatrimonio, codigoSerial)
+            VALUES (?, ?)
         """;
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement p = conn.prepareStatement(sql)) {
-            p.setString(1, patrimonio);
-            p.setString(2, codigoSerial);
-            p.executeUpdate();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, patrimonio);
+            stmt.setString(2, codigoSerial);
+            stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Erro instalando software", e);
+            throw new RuntimeException("Erro ao instalar software: " + e.getMessage(), e);
         }
     }
 
+    @Override
     public void uninstallSoftware(String patrimonio, String codigoSerial) {
         String sql = """
-          DELETE FROM equipamento_softwares
-           WHERE numeroPatrimonio = ? AND codigoSerial = ?;
+            DELETE FROM equipamento_softwares
+             WHERE numeroPatrimonio = ?
+               AND codigoSerial     = ?
         """;
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement p = conn.prepareStatement(sql)) {
-            p.setString(1, patrimonio);
-            p.setString(2, codigoSerial);
-            p.executeUpdate();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, patrimonio);
+            stmt.setString(2, codigoSerial);
+            stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Erro desinstalando software", e);
+            throw new RuntimeException("Erro ao desinstalar software: " + e.getMessage(), e);
         }
     }
 
+    @Override
     public List<String> findInstalledSerials(String patrimonio) {
-        List<String> seriais = new ArrayList<>();
         String sql = """
-          SELECT codigoSerial
-            FROM equipamento_softwares
-           WHERE numeroPatrimonio = ?;
+            SELECT codigoSerial
+              FROM equipamento_softwares
+             WHERE numeroPatrimonio = ?
         """;
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement p = conn.prepareStatement(sql)) {
-            p.setString(1, patrimonio);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                seriais.add(rs.getString("codigoSerial"));
+        List<String> seriais = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, patrimonio);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    seriais.add(rs.getString("codigoSerial"));
+                }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Erro lendo instalações", e);
+            throw new RuntimeException("Erro ao buscar softwares instalados: " + e.getMessage(), e);
         }
         return seriais;
     }
