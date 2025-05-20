@@ -17,7 +17,7 @@ public class EquipamentoRepositorySQLite implements EquipamentoRepository {
     public EquipamentoRepositorySQLite() {
         try (Connection conn = DriverManager.getConnection(url);
              Statement stmt = conn.createStatement()) {
-            // As tabelas já são criadas pelo DatabaseInitializer
+            // Tabelas já são criadas pelo DatabaseInitializer
         } catch (SQLException e) {
             throw new RuntimeException("Erro iniciando tabela equipamentos", e);
         }
@@ -96,7 +96,7 @@ public class EquipamentoRepositorySQLite implements EquipamentoRepository {
         }
     }
 
-    // Novos métodos para associação:
+    // Métodos para associação:
 
     public void installSoftware(String patrimonio, String codigoSerial) {
         String sql = """
@@ -111,6 +111,21 @@ public class EquipamentoRepositorySQLite implements EquipamentoRepository {
             p.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro instalando software", e);
+        }
+    }
+
+    public void uninstallSoftware(String patrimonio, String codigoSerial) {
+        String sql = """
+          DELETE FROM equipamento_softwares
+           WHERE numeroPatrimonio = ? AND codigoSerial = ?;
+        """;
+        try (Connection conn = DriverManager.getConnection(url);
+             PreparedStatement p = conn.prepareStatement(sql)) {
+            p.setString(1, patrimonio);
+            p.setString(2, codigoSerial);
+            p.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro desinstalando software", e);
         }
     }
 
@@ -134,5 +149,4 @@ public class EquipamentoRepositorySQLite implements EquipamentoRepository {
         return seriais;
     }
 }
-
 
