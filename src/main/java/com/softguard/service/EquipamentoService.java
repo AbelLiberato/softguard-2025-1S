@@ -9,8 +9,8 @@ package com.softguard.service;
 import com.softguard.model.Equipamento;
 import com.softguard.model.Software;
 import com.softguard.repository.EquipamentoRepository;
-import com.softguard.repository.EquipamentoRepositorySQLite;
 import com.softguard.repository.SoftwareRepository;
+import com.softguard.repository.EquipamentoRepositorySQLite;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -44,15 +44,23 @@ public class EquipamentoService {
     }
 
     public void instalarSoftware(String patrimonio, String codigoSerial) {
-        // valida existência
         equipamentoRepo.findByPatrimonio(patrimonio)
             .orElseThrow(() -> new NoSuchElementException("Equipamento não encontrado"));
         softwareRepo.findBySerial(codigoSerial)
             .orElseThrow(() -> new NoSuchElementException("Software não encontrado"));
 
-        // chama o método do repositório SQLite
         ((EquipamentoRepositorySQLite) equipamentoRepo)
             .installSoftware(patrimonio, codigoSerial);
+    }
+
+    public void desinstalarSoftware(String patrimonio, String codigoSerial) {
+        equipamentoRepo.findByPatrimonio(patrimonio)
+            .orElseThrow(() -> new NoSuchElementException("Equipamento não encontrado"));
+        softwareRepo.findBySerial(codigoSerial)
+            .orElseThrow(() -> new NoSuchElementException("Software não encontrado"));
+
+        ((EquipamentoRepositorySQLite) equipamentoRepo)
+            .uninstallSoftware(patrimonio, codigoSerial);
     }
 
     public List<Software> listarSoftwaresInstalados(String patrimonio) {
@@ -64,4 +72,5 @@ public class EquipamentoService {
                        .toList();
     }
 }
+
 
