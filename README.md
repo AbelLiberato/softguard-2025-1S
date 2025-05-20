@@ -1,2 +1,10 @@
-# softguard-2025-1S
- Sistema de Gestão de Licenças e Equipamentos de TI.
+# SoftGuard – Gestão de TI
+
+**Autor:** Abel José Mamede Liberato (RA: 324141316)  
+**Tecnologias:**  
+- Java 23, Maven  
+- SQLite 
+- Swing (GUI)  
+- JUnit
+
+---
