@@ -14,25 +14,10 @@ import java.util.Optional;
 
 public class SoftwareRepositorySQLite implements SoftwareRepository {
 
-    private final String url = "jdbc:sqlite:softguard.db";
+    private final Connection connection;
 
-    public SoftwareRepositorySQLite() {
-        try (Connection conn = DriverManager.getConnection(url);
-             Statement stmt = conn.createStatement()) {
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS softwares (
-                  codigoSerial TEXT PRIMARY KEY,
-                  nome TEXT NOT NULL,
-                  versao TEXT,
-                  dataLicenca TEXT,
-                  validadeLicenca TEXT,
-                  loginLicenca TEXT,
-                  senhaLicenca TEXT
-                );
-            """);
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro iniciando tabela softwares", e);
-        }
+    public SoftwareRepositorySQLite(Connection connection) {
+        this.connection = connection;
     }
 
     @Override
@@ -42,8 +27,7 @@ public class SoftwareRepositorySQLite implements SoftwareRepository {
               (codigoSerial, nome, versao, dataLicenca, validadeLicenca, loginLicenca, senhaLicenca)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """;
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement p = conn.prepareStatement(sql)) {
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, software.getCodigoSerial());
             p.setString(2, software.getNome());
             p.setString(3, software.getVersao());
@@ -60,8 +44,7 @@ public class SoftwareRepositorySQLite implements SoftwareRepository {
     @Override
     public Optional<Software> findBySerial(String serial) {
         String sql = "SELECT * FROM softwares WHERE codigoSerial = ?";
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement p = conn.prepareStatement(sql)) {
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, serial);
             ResultSet rs = p.executeQuery();
             if (rs.next()) {
@@ -85,8 +68,7 @@ public class SoftwareRepositorySQLite implements SoftwareRepository {
     public List<Software> findAll() {
         List<Software> lista = new ArrayList<>();
         String sql = "SELECT * FROM softwares";
-        try (Connection conn = DriverManager.getConnection(url);
-             Statement stmt = conn.createStatement();
+        try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 lista.add(new Software(
@@ -108,8 +90,7 @@ public class SoftwareRepositorySQLite implements SoftwareRepository {
     @Override
     public void deleteBySerial(String serial) {
         String sql = "DELETE FROM softwares WHERE codigoSerial = ?";
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement p = conn.prepareStatement(sql)) {
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, serial);
             p.executeUpdate();
         } catch (SQLException e) {
@@ -117,3 +98,4 @@ public class SoftwareRepositorySQLite implements SoftwareRepository {
         }
     }
 }
+

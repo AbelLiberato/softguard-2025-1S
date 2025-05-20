@@ -10,6 +10,7 @@ import com.softguard.service.SoftwareService;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.sql.Connection;
 
 public class MainWindow extends JFrame {
     private final SoftwareService servSoft;
@@ -17,8 +18,8 @@ public class MainWindow extends JFrame {
 
     public MainWindow(SoftwareService ss, EquipamentoService es) {
         super("SoftGuard – Gestão de TI");
-        this.servSoft     = ss;
-        this.servEquip    = es;
+        this.servSoft  = ss;
+        this.servEquip = es;
         initComponents();
     }
 
@@ -27,7 +28,6 @@ public class MainWindow extends JFrame {
         setSize(600, 450);
         setLocationRelativeTo(null);
 
-        // Agora em 5 linhas x 2 colunas para comportar o novo botão
         JPanel painel = new JPanel(new GridLayout(5, 2, 10, 10));
 
         painel.add(botao("Cadastrar Equipamento", this::onCadEquip));
@@ -44,7 +44,6 @@ public class MainWindow extends JFrame {
         getContentPane().add(painel, BorderLayout.CENTER);
     }
 
-    // método auxiliar para criar botão
     private JButton botao(String texto, java.util.function.Consumer<ActionEvent> acao) {
         JButton b = new JButton(texto);
         b.addActionListener(acao::accept);
@@ -84,7 +83,6 @@ public class MainWindow extends JFrame {
     }
 
     public static void main(String[] args) {
-        // Nimbus L&F
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -92,17 +90,23 @@ public class MainWindow extends JFrame {
                     break;
                 }
             }
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {}
 
-        // Init banco e serviços
+        // Inicializa o banco e mantém a conexão
         com.softguard.database.DatabaseInitializer.initialize();
-        var repoSoft        = new com.softguard.repository.SoftwareRepositorySQLite();
-        var repoEquip       = new com.softguard.repository.EquipamentoRepositorySQLite();
-        var servSoftware    = new com.softguard.service.SoftwareService(repoSoft);
-        var servEquipamento = new com.softguard.service.EquipamentoService(repoEquip, repoSoft);
+        Connection connection = com.softguard.database.DatabaseInitializer.getConnection();
+
+        // Repositórios com conexão compartilhada
+        var repoSoft  = new com.softguard.repository.SoftwareRepositorySQLite(connection);
+        var repoEquip = new com.softguard.repository.EquipamentoRepositorySQLite(connection);
+
+        // Serviços com repositórios
+        var servSoftware    = new SoftwareService(repoSoft);
+        var servEquipamento = new EquipamentoService(repoEquip, repoSoft);
 
         SwingUtilities.invokeLater(() ->
             new MainWindow(servSoftware, servEquipamento).setVisible(true)
         );
     }
 }
+

@@ -5,6 +5,7 @@
 package com.softguard.repository;
 
 import com.softguard.model.Equipamento;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -13,4 +14,9 @@ public interface EquipamentoRepository {
     Optional<Equipamento> findByPatrimonio(String patrimonio);
     List<Equipamento> findAll();
     void deleteByPatrimonio(String patrimonio);
+
+    // Novos métodos necessários para a EquipamentoService
+    void installSoftware(String patrimonio, String codigoSerial);
+    void uninstallSoftware(String patrimonio, String codigoSerial);
+    List<String> findInstalledSerials(String patrimonio);
 }
